@@ -1,0 +1,34 @@
+---
+  - name: Install EPEL
+    yum:
+      name: https://mirror.webtatic.com/yum/el6/latest.rpm
+      state: installed
+
+  - name: Install php
+    yum: name={{item}} state=present
+    notify: reload apache
+    with_items:
+     "{{ php_extensions }}"
+     
+  - name: download composer
+    get_url:
+      url: https://getcomposer.org/installer
+      dest: /tmp/installer
+    tags:
+      - composer
+
+  - name: install composer
+    shell: cat /tmp/installer | php -- --install-dir=/usr/local/bin
+    args:
+      creates: /usr/local/bin/composer
+
+  - name: rename composer.phar to composer
+    shell: mv /usr/local/bin/composer.phar /usr/local/bin/composer
+    args:
+      creates: /usr/local/bin/composer
+
+  - name: make composer executable
+    file:
+      path: /usr/local/bin/composer
+      mode: a+x
+      state: file

@@ -1,0 +1,67 @@
+---
+- name: Set directory path
+  set_fact:
+    path: "{{wp_install_path}}/{{wp_directory_name}}"
+
+# we don't want to reinstall WordPress!
+- name: Only install Wordpress when there is no index.php in the path
+  stat:
+    path: "{{path}}/index.php"
+  register: stat_result
+
+- name: Wordpresss | Ensure that installation directory exists
+  file: path={{path}} state=directory
+  when: stat_result.stat.exists == False
+
+- name: Wordpresss | Download Latest Version to /tmp
+  get_url: url=https://wordpress.org/latest.tar.gz force=no dest=/tmp/wordpress.tar.gz
+  when: stat_result.stat.exists == False
+
+- name: Wordpresss | Extract archive
+  unarchive: src=/tmp/wordpress.tar.gz dest=/tmp copy=no
+  when: stat_result.stat.exists == False
+
+
+- name: Wordpresss | Move extracted directory to {{path}}
+  shell: cp -r -n /tmp/wordpress/* "{{ path }}"
+  when: stat_result.stat.exists == False
+
+
+- name: Wordpresss | Remove wordpress.tar.gz
+  file: path=/tmp/wordpress.tar.gz state=absent
+  when: stat_result.stat.exists == False
+
+- name: Fetch random salts for WordPress config
+  local_action: command curl https://api.wordpress.org/secret-key/1.1/salt/
+  register: "wp_salt"
+  become: no
+  become_method: sudo
+
+- name: Copy WordPress config file
+  template: src=wp-config.php dest={{ path }}
+
+- name: Wordpresss | Change ownership of installation directory
+  file: path={{ path }} owner={{ permission__owner }} group={{ permission_group }}  state=directory recurse=yes setype=httpd_sys_content_t
+  when: stat_result.stat.exists == False
+
+- name: Wordpresss | Change ownership of wp-content directory
+  file: path={{ path }}/wp-content/ owner={{ permission__owner }} group={{ permission_group }} mode=755 state=directory recurse=yes
+  when: stat_result.stat.exists == False
+
+
+- name: Configure the Virtual Host Config
+  template: src=vhost.conf.j2 dest=/etc/httpd/conf.d/wordpress.conf mode=0644
+
+- name: Create a new database
+  mysql_db:
+    config_file: "/root/.my.cnf"
+    name: "{{wordpress_database_name}}"
+    state: present
+
+- name: Create a new database user and password
+  mysql_user:
+    config_file: "/root/.my.cnf"
+    name: "{{mysql_wordpress_username}}"
+    password: "{{mysql_wordpress_password}}"
+    priv: '{{wordpress_database_name}}.*:ALL'
+    state: present

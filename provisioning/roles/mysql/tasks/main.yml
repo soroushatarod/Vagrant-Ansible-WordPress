@@ -1,0 +1,60 @@
+---
+
+  - name: Install MySQL 5.7 repo
+    yum:
+      name: https://dev.mysql.com/get/mysql57-community-release-el6-11.noarch.rpm
+      state: present
+
+
+  - name: Install MySQL Python
+    package:
+      name: MySQL-python
+      state: present
+
+  - name: install MySQL Server
+    package:
+      name: mysql-community-server
+      state: present
+    notify:
+      - restart mysql
+
+  - name: ensure MySQL always starts
+    service:
+      name: mysqld
+      state: restarted
+      enabled: yes
+
+  - name: MYSQL ROOT PASSWORD display MySQL root password MYSQL ROOT PASSWORD
+    shell: grep 'A temporary password is generated for root@localhost' /var/log/mysqld.log |tail -1
+    register: hello
+
+
+  - debug: msg="{{ hello.stdout }}"
+
+  - set_fact:
+      default_password: "{{ hello.stdout | regex_findall('root@localhost: (.*)') }}"
+
+  - debug:
+      msg: "{{default_password}}"
+
+
+  - name: check if root my.conf exists
+    stat:
+      path: "/root/.my.cnf"
+    register: my_cnf_status
+
+  - name: Restart mysql
+    service:
+      name: mysqld
+      state: restarted
+  
+  - name: Reset the temporary password
+    shell: 'mysql -e "SET PASSWORD = PASSWORD(''{{ mysql_root_password }}'');" --connect-expired-password -uroot -p"{{ default_password[0] }}"'
+    when: my_cnf_status.stat.exists == False
+
+
+
+  - name: Place ~/.my.cnf
+    template:
+     src: .my.cnf.j2
+     dest: "/root/.my.cnf"
