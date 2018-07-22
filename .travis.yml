@@ -1,0 +1,9 @@
+---
+services: docker
+
+env:
+  - distro: centos6
+
+script:
+
+ansible-playbook -i provisioning/roles/apache/tests/inventory tests/test.yml --syntax-check
