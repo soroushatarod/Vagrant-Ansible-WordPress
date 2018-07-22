@@ -3,32 +3,29 @@
   set_fact:
     path: "{{wp_install_path}}/{{wp_directory_name}}"
 
-# we don't want to reinstall WordPress!
 - name: Only install Wordpress when there is no index.php in the path
   stat:
     path: "{{path}}/index.php"
   register: stat_result
 
-- name: Wordpresss | Ensure that installation directory exists
-  file: path={{path}} state=directory
-  when: stat_result.stat.exists == False
+- name: install wordpress
+  block:
+    - name: check installation path exists
+      file: path={{path}} state=directory
 
-- name: Wordpresss | Download Latest Version to /tmp
-  get_url: url=https://wordpress.org/latest.tar.gz force=no dest=/tmp/wordpress.tar.gz
-  when: stat_result.stat.exists == False
+    - name: download the latest wordpress version
+      get_url: url=https://wordpress.org/latest.tar.gz force=no dest=/tmp/wordpress.tar.gz
+    
+    - name: unzip the folder
+      unarchive: src=/tmp/wordpress.tar.gz dest=/tmp copy=no
 
-- name: Wordpresss | Extract archive
-  unarchive: src=/tmp/wordpress.tar.gz dest=/tmp copy=no
-  when: stat_result.stat.exists == False
+    - name: copy wordpress to the installation directory
+      shell: cp -r -n /tmp/wordpress/* "{{ path }}"
 
-
-- name: Wordpresss | Move extracted directory to {{path}}
-  shell: cp -r -n /tmp/wordpress/* "{{ path }}"
-  when: stat_result.stat.exists == False
-
-
-- name: Wordpresss | Remove wordpress.tar.gz
-  file: path=/tmp/wordpress.tar.gz state=absent
+    - file: path=/tmp/wordpress.tar.gz state=absent
+    - file: path={{ path }} owner=root group=root  state=directory recurse=yes setype=httpd_sys_content_t
+    - file: path={{ path }}/wp-content/ owner=root group=root mode=777 state=directory recurse=yes
+    
   when: stat_result.stat.exists == False
 
 - name: Fetch random salts for WordPress config
@@ -40,28 +37,26 @@
 - name: Copy WordPress config file
   template: src=wp-config.php dest={{ path }}
 
-- name: Wordpresss | Change ownership of installation directory
-  file: path={{ path }} owner={{ permission__owner }} group={{ permission_group }}  state=directory recurse=yes setype=httpd_sys_content_t
-  when: stat_result.stat.exists == False
-
-- name: Wordpresss | Change ownership of wp-content directory
-  file: path={{ path }}/wp-content/ owner={{ permission__owner }} group={{ permission_group }} mode=755 state=directory recurse=yes
-  when: stat_result.stat.exists == False
-
-
 - name: Configure the Virtual Host Config
   template: src=vhost.conf.j2 dest=/etc/httpd/conf.d/wordpress.conf mode=0644
 
-- name: Create a new database
-  mysql_db:
-    config_file: "/root/.my.cnf"
-    name: "{{wordpress_database_name}}"
-    state: present
 
-- name: Create a new database user and password
-  mysql_user:
-    config_file: "/root/.my.cnf"
-    name: "{{mysql_wordpress_username}}"
-    password: "{{mysql_wordpress_password}}"
-    priv: '{{wordpress_database_name}}.*:ALL'
-    state: present
+- name: check if /root/.my.cnf exists or not
+  stat:
+    path: "/root/.my.cnf"
+  register: my_cnf_status
+
+- name: create DB and username and password
+  block:
+   - mysql_db:
+      config_file: "/root/.my.cnf"
+      name: "{{wordpress_database_name}}"
+      state: present
+
+   - mysql_user:
+      config_file: "/root/.my.cnf"
+      name: "{{mysql_wordpress_username}}"
+      password: "{{mysql_wordpress_password}}"
+      priv: '{{wordpress_database_name}}.*:ALL'
+      state: present
+  when: my_cnf_status.stat.exists == True

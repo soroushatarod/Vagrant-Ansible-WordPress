@@ -1,0 +1,19 @@
+---
+- hosts: mysql
+  become: yes
+  vars:
+    mysql_root_password: 98_Av&%Ac54
+    wordpress_database_name: wordpress
+    mysql_wordpress_username: wordpress_db
+    mysql_wordpress_password: 28_Av&%Ac54
+  roles:
+    - mysql
+  
+- hosts: webserver
+  become: yes
+  post_tasks:
+    - debug: var=ansible_all_ipv4_addresses[1]
+  roles:
+    - apache
+    - php
+    - wordpress

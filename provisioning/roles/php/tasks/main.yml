@@ -1,11 +1,29 @@
 ---
-  - name: Install EPEL
-    yum:
-      name: https://mirror.webtatic.com/yum/el6/latest.rpm
-      state: installed
+  - name: Include OS-specific variables.
+    include_vars: "{{ ansible_os_family }}.yml"
+    
+  - name: configure repo on CentOS 
+    block:
+      - name: Install EPEL
+        yum:
+          name: http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+          state: installed
+
+      - name: run yum-config-manager
+        command: yum-config-manager --enable remi-php72
+
+    when: ansible_distribution == 'CentOS'
+
+
+  - name: add PHP Sury repo
+    apt_repository:
+      repo: ppa:ondrej/php
+      state: present
+    notify: update-cache
+    when: ansible_distribution == 'Ubuntu'
 
   - name: Install php
-    yum: name={{item}} state=present
+    package: name={{item}} state=present
     notify: reload apache
     with_items:
      "{{ php_extensions }}"

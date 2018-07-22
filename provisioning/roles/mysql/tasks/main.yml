@@ -1,58 +1,77 @@
 ---
+  - name: Include OS-specific variables.
+    include_vars: "{{ ansible_os_family }}.yml"
+
+  - name: Install libselinux python for ansible copying file
+    package:
+      name: libselinux-python
+      state: present
+    when: ansible_distribution == 'CentOS'
 
   - name: Install MySQL 5.7 repo
     yum:
       name: https://dev.mysql.com/get/mysql57-community-release-el6-11.noarch.rpm
       state: present
-
-
-  - name: Install MySQL Python
-    package:
-      name: MySQL-python
-      state: present
+    when: ansible_distribution == 'CentOS'
 
   - name: install MySQL Server
-    package:
+    yum:
       name: mysql-community-server
       state: present
     notify:
-      - restart mysql
+      - restart-mysql
+    when: ansible_distribution == 'CentOS'
 
+  - name: Install MySQL Server
+    apt:
+      name: mysql-server
+      state: present
+    notify:
+      - restart-mysql
+    when: ansible_distribution == 'Ubuntu'
+
+  - name: Install MySQL-Python
+    package:
+      name: "{{ mysql_python }}"
+      state: latest
+
+
+   # we could move this to a handler 
   - name: ensure MySQL always starts
     service:
-      name: mysqld
+      name: "{{ mysql_service_name }}"
       state: restarted
       enabled: yes
 
+   # MySQL installation on CentOS generates a random password unlike ubuntu 
   - name: MYSQL ROOT PASSWORD display MySQL root password MYSQL ROOT PASSWORD
     shell: grep 'A temporary password is generated for root@localhost' /var/log/mysqld.log |tail -1
     register: hello
-
-
-  - debug: msg="{{ hello.stdout }}"
+    when: ansible_distribution == 'CentOS' and ansible_distribution_version < '7'
 
   - set_fact:
       default_password: "{{ hello.stdout | regex_findall('root@localhost: (.*)') }}"
-
-  - debug:
-      msg: "{{default_password}}"
-
-
+    when: ansible_distribution == 'CentOS'
+    
   - name: check if root my.conf exists
     stat:
       path: "/root/.my.cnf"
     register: my_cnf_status
 
+  - debug:
+     msg: "{{ my_cnf_status }}" 
+
+  - debug:
+    msg: "{{ default_password }}"
+
   - name: Restart mysql
     service:
-      name: mysqld
+      name: "{{ mysql_service_name }}"
       state: restarted
   
   - name: Reset the temporary password
     shell: 'mysql -e "SET PASSWORD = PASSWORD(''{{ mysql_root_password }}'');" --connect-expired-password -uroot -p"{{ default_password[0] }}"'
-    when: my_cnf_status.stat.exists == False
-
-
+    when: ansible_distribution == 'CentOS' and  my_cnf_status.stat.exists == False  
 
   - name: Place ~/.my.cnf
     template:

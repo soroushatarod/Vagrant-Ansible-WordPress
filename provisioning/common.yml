@@ -1,0 +1,38 @@
+---
+- hosts: all
+  become: yes
+  pre_tasks:
+    - name: Include OS-specific variables.
+      include_vars: "{{ ansible_os_family }}.yml"
+
+    - name: run pre tasks on ubuntu
+      block:
+        - name: update apt cache
+          apt: 
+            update_cache: yes
+
+        - name: Install MySQl-Python
+          apt:
+            name: python-mysqldb
+            state: present
+      when: ansible_distribution == 'Ubuntu'
+    
+    - name: run pre tasks on centos
+      block:
+
+        - name: update yum
+          yum:
+            name: '*'
+            update_cache: yes
+            state: latest
+
+        - name: Install common packages for CentOS 
+          yum:
+            name: "{{ item }}"
+            state: present
+          with_items:
+            - libselinux-python
+            - MySQL-python
+            - yum-utils
+      when: ansible_distribution == 'CentOS'
+

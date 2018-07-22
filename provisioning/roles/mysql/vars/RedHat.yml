@@ -1,0 +1,2 @@
+mysql_service_name: mysqld
+mysql_python: MySQL-python
