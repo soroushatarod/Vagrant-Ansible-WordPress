@@ -6,4 +6,4 @@ env:
 
 script:
 
-ansible-playbook -i provisioning/roles/apache/tests/inventory tests/test.yml --syntax-check
+  - ansible-playbook -i provisioning/roles/apache/tests/inventory tests/test.yml --syntax-check
