@@ -16,11 +16,11 @@ before_install:
 
 script:
 
-  - wget -O ${PWD}/tests/test.sh https://gist.github.com/soroushatarod/55218a5d24bc6c889836249719318ebd
+  - wget -O ${PWD}/provisioning/roles/tests/test.sh https://gist.github.com/soroushatarod/55218a5d24bc6c889836249719318ebd
 
-  - chmod +x ${PWD}/tests/test.sh
+  - chmod +x ${PWD}/provisioning/roles/tests/test.sh
 
-  - ${PWD}/tests/test.sh
+  - ${PWD}/provisioning/roles/tests/test.sh
 
 notifications:
   # Notify Ansible Galaxy when a role builds successfully.
