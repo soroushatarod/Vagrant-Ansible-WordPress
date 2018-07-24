@@ -5,8 +5,7 @@ sudo: required
 env:
   # Provide a list of OSes we want to use for testing.
   - distro: centos6
-    init: /sbin/init
-    run_opts: "--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro"
+
 # Tell Travis to start Docker when it brings up an environment.
 services:
   - docker
@@ -16,11 +15,12 @@ before_install:
   - 'docker pull geerlingguy/docker-${distro}-ansible:latest'
 
 script:
-  - container_id=$(mktemp)
 
-  - 'docker run --detach --volume="${PWD}/provisioning/roles/":/etc/ansible/roles:ro ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${init}" > "${container_id}"'
+  - wget -O ${PWD}/tests/test.sh https://gist.github.com/soroushatarod/55218a5d24bc6c889836249719318ebd
 
-  - sudo docker exec  -w /etc/ansible/roles/  $container_id   ansible-playbook apache/tests/test.yml --syntax-check
+  - chmod +x ${PWD}/tests/test.sh
+
+  - ${PWD}/tests/test.sh
 
 notifications:
   # Notify Ansible Galaxy when a role builds successfully.
