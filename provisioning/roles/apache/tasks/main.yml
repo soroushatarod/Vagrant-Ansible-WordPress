@@ -1,7 +1,6 @@
 ---
-          - name: Include OS-specific variables.
-    include_
-    vars: "{{ ansible_os_family }}.yml"
+  - name: Include OS-specific variables.
+    include_vars: "{{ ansible_os_family }}.yml"
 
   - name: Install libselinux python for ansible copying file
     yum:
