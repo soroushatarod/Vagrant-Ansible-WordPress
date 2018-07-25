@@ -1,26 +1,19 @@
 ---
-# We need sudo for some of the Docker commands.
-sudo: required
+services: docker
 
 env:
-  # Provide a list of OSes we want to use for testing.
+#  - distro: centos7
   - distro: centos6
-
-# Tell Travis to start Docker when it brings up an environment.
-services:
-  - docker
-
-before_install:
-  # Pull the image from Docker Hub for the OS under test.
-  - 'docker pull geerlingguy/docker-${distro}-ansible:latest'
+#  - distro: ubuntu1804
+#  - distro: ubuntu1604
+#  - distro: ubuntu1404
+#  - distro: debian9
+#  - distro: debian8
 
 script:
 
-  - wget -O ${PWD}/provisioning/roles/tests/test.sh https://gist.github.com/soroushatarod/55218a5d24bc6c889836249719318ebd
-
-  - chmod +x ${PWD}/provisioning/roles/tests/test.sh
-
-  - ${PWD}/provisioning/roles/tests/test.sh
+  - chmod +x ${PWD}/provisioning/roles/apache/tests/test.sh
+  - ${PWD}/provisioning/roles/apache/tests/test.sh
 
 notifications:
   # Notify Ansible Galaxy when a role builds successfully.
