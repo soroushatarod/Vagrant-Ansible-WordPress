@@ -9,7 +9,7 @@ env:
 #  - distro: ubuntu1404
 #  - distro: debian9
 #  - distro: debian8
-   - role_dir: TRAVIS_BUILD_DIR/provisioning/roles/apache
+  - role_dir: ${PWD}/provisioning/roles/apache
 
 script:
 
