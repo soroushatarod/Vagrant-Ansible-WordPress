@@ -29,7 +29,7 @@ timestamp=$(date +%s)
 # Allow environment variables to override defaults.
 distro=${distro:-"centos7"}
 playbook=${playbook:-"test.yml"}
-role_dir=${role_dir:-"$PWD"}
+role_dir=${role_dir:-"$PWD/provisioning/"}
 cleanup=${cleanup:-"true"}
 container_id=${container_id:-$timestamp}
 test_idempotence=${test_idempotence:-"true"}
