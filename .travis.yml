@@ -9,12 +9,11 @@ env:
 #  - distro: ubuntu1404
 #  - distro: debian9
 #  - distro: debian8
-  - role_dir: ${PWD}/provisioning/roles/apache
 
 script:
 
-  - chmod +x ${PWD}/provisioning/roles/apache/tests/test.sh
-  - ${PWD}/provisioning/roles/apache/tests/test.sh
+  - chmod +x ${PWD}/provisioning/test.sh
+  - ${PWD}/provisioning/test.sh
 
 notifications:
   # Notify Ansible Galaxy when a role builds successfully.

@@ -29,7 +29,7 @@ timestamp=$(date +%s)
 # Allow environment variables to override defaults.
 distro=${distro:-"centos7"}
 playbook=${playbook:-"test.yml"}
-role_dir=${role_dir:-"$PWD/provisioning/roles/apache"}
+role_dir=${role_dir:-"$PWD"}
 cleanup=${cleanup:-"true"}
 container_id=${container_id:-$timestamp}
 test_idempotence=${test_idempotence:-"true"}
@@ -83,7 +83,7 @@ fi
 printf ${green}"$role_dir"${neutral}"\n"
 printf $role_dir
 docker pull geerlingguy/docker-$distro-ansible:latest
-docker run --detach --volume="$role_dir":/etc/ansible/roles/role_under_test:rw --name $container_id $opts geerlingguy/docker-$distro-ansible:latest $init
+docker run --detach --volume="$role_dir":/etc/ansible/roles/:rw --name $container_id $opts geerlingguy/docker-$distro-ansible:latest $init
 
 printf "\n"
 
@@ -93,7 +93,7 @@ printf "\n"
 
 # Test Ansible syntax.
 printf ${green}"Checking Ansible playbook syntax."${neutral}
-docker exec --tty $container_id env TERM=xterm ansible-playbook /etc/ansible/roles/role_under_test/tests/$playbook --syntax-check
+docker exec --tty $container_id env TERM=xterm ansible-playbook /etc/ansible/roles/$playbook --syntax-check
 
 printf "\n"
 
