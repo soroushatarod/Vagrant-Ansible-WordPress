@@ -1,1 +1,2 @@
 ---
+mysql_root_remote: GRANT ALL PRIVILEGES ON *.* TO  'root@%' identified by

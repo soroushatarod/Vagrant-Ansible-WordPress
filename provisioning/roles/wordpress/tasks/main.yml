@@ -39,24 +39,19 @@
 
 - name: Configure the Virtual Host Config
   template: src=vhost.conf.j2 dest=/etc/httpd/conf.d/wordpress.conf mode=0644
+  when: ansible_distribution == 'CentOS'
 
+- name: Create the Virtual Host Config
+  template: src=vhost.conf.j2 dest=/etc/apache2/sites-available/wordpress.conf mode=0644
+  when: ansible_distribution == 'Ubuntu'
 
-- name: check if /root/.my.cnf exists or not
-  stat:
-    path: "/root/.my.cnf"
-  register: my_cnf_status
+- name: Create the Virtual Host Config
+  template: src=vhost.conf.j2 dest=/etc/apache2/sites-available/wordpress.conf mode=0644
+  when: ansible_distribution == 'Ubuntu'
 
-- name: create DB and username and password
-  block:
-   - mysql_db:
-      config_file: "/root/.my.cnf"
-      name: "{{wordpress_database_name}}"
-      state: present
-
-   - mysql_user:
-      config_file: "/root/.my.cnf"
-      name: "{{mysql_wordpress_username}}"
-      password: "{{mysql_wordpress_password}}"
-      priv: '{{wordpress_database_name}}.*:ALL'
-      state: present
-  when: my_cnf_status.stat.exists == True
+- name: enable the Virtual Host
+  file:
+    src: /etc/apache2/sites-available/wordpress.conf
+    dest: /etc/apache2/sites-enabled/wordpress.conf
+    state: link
+  notify: reload apache

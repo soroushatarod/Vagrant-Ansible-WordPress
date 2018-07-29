@@ -1,5 +1,5 @@
 [webserver]
-ms01 ansible_host=192.168.2.5 ansible_user=vagrant ansible_password=vagrant
+apache01 ansible_host=192.168.2.5 ansible_user=vagrant ansible_password=vagrant
 
 [mysql]
-ms01 ansible_host=192.168.2.6 ansible_user=vagrant ansible_password=vagrant
+mysql01 ansible_host=192.168.2.6 ansible_user=vagrant ansible_password=vagrant

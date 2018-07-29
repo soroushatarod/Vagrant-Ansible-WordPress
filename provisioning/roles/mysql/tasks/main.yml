@@ -36,7 +36,7 @@
       state: latest
 
 
-   # we could move this to a handler 
+   #we could move this to a handler 
   - name: ensure MySQL always starts
     service:
       name: "{{ mysql_service_name }}"
@@ -58,22 +58,55 @@
       path: "/root/.my.cnf"
     register: my_cnf_status
 
-  - debug:
-     msg: "{{ my_cnf_status }}" 
-
-  - debug:
-    msg: "{{ default_password }}"
-
-  - name: Restart mysql
-    service:
-      name: "{{ mysql_service_name }}"
-      state: restarted
   
+  - name: MYSQL ROOT PASSWORD display MySQL root password MYSQL ROOT PASSWORD
+    shell: grep 'A temporary password is generated for root@localhost' /var/log/mysqld.log |tail -1
+    register: hello
+    when: ansible_distribution == 'CentOS' and ansible_distribution_version < '7'
+
   - name: Reset the temporary password
     shell: 'mysql -e "SET PASSWORD = PASSWORD(''{{ mysql_root_password }}'');" --connect-expired-password -uroot -p"{{ default_password[0] }}"'
     when: ansible_distribution == 'CentOS' and  my_cnf_status.stat.exists == False  
+
+  - name: Uninstall validate_password plugin
+    shell: 'mysql -e "uninstall plugin validate_password" --connect-expired-password -uroot -p"{{ mysql_root_password }}"'
+    when: ansible_distribution == 'CentOS' and  my_cnf_status.stat.exists == False
+
+  - name: make MySQL changes for Ubuntu
+    block:
+
+      - name: Allow remote connections
+        lineinfile:
+          path: /etc/mysql/mysql.conf.d/mysqld.cnf
+          regexp: "^bind-address"
+          line: "bind-address = 0.0.0.0"
+        notify: restart-mysql
+
+      - name: set root password Ubuntu
+        mysql_user:
+          login_user: 'root'
+          name: 'root'
+          password: "{{ mysql_root_password }}"
+          state: present
+          host: '%'
+
+    when: ansible_distribution == 'Ubuntu'
+
 
   - name: Place ~/.my.cnf
     template:
      src: .my.cnf.j2
      dest: "/root/.my.cnf"
+
+  - name: create WordPress Database
+    mysql_db:
+      name: "{{wordpress_database_name}}"
+      state: present
+
+  - name: Grant all previliges
+    mysql_user:
+      name: "{{mysql_wordpress_username}}"
+      password: "{{ mysql_wordpress_password }}"
+      priv: '*.*:ALL'
+      host: '%'
+      state: present
