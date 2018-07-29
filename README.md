@@ -2,6 +2,8 @@ Provision Vagrant LAMP stack in Ansible for WordPress development
 
 <img src="https://api.travis-ci.com/soroushatarod/Vagrant-Ansible-WordPress-CentOS.svg?branch=master">
 
+<img src="lamp.png" />
+
 <h2>Provisions Vagrant machine for WordPress development</h2>
 
 * Installs MySQL 5.7
