@@ -1,6 +1,6 @@
 Provision Vagrant LAMP stack in Ansible for WordPress development
 
-<img src="https://api.travis-ci.com/soroushatarod/Vagrant-Ansible-WordPress-CentOS.svg?branch=master">
+<img src="https://api.travis-ci.com/soroushatarod/Vagrant-Ansible-WordPress.svg?branch=master">
 
 <img src="lamp.png" />
 
