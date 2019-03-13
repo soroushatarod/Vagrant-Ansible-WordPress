@@ -12,7 +12,7 @@
 - hosts: webserver
   become: yes
   post_tasks:
-    - debug: var=ansible_all_ipv4_addresses[1]
+    - debug: var=ansible_all_ipv4_addresses
   roles:
     - apache
     - php

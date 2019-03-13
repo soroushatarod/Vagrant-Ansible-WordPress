@@ -66,6 +66,12 @@ Vagrant.configure("2") do |config|
           s.inline = $script
         end
       end
+	  
+      if $OS == 'bento/ubuntu-16.04'
+        v.vm.provision "file", source: "provisioning/99force-ipv4.txt", destination: "~/99force-ipv4"
+        v.vm.provision "shell",
+          inline: "sudo mv /home/vagrant/99force-ipv4 /etc/apt/apt.conf.d/99force-ipv4"
+	  end
 
       v.vm.provision "ansible_local" do |ansible|
         ansible.playbook = "provisioning/provision.yml"

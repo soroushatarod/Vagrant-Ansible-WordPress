@@ -5,6 +5,11 @@
 
     - name: run pre tasks on ubuntu
       block:
+        - name: disable IPV6 for apt-get
+          copy:
+            src: 99force-ipv4.txt
+            dest: /etc/apt/apt.conf.d/99force-ipv4
+          
         - name: update apt cache
           apt: 
             update_cache: yes
